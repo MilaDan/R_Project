@@ -1,0 +1,111 @@
+---
+title: "Final Project"
+author: "Dan Geng"
+date: "11/18/2021"
+output: html_document
+---
+
+```{r}
+lend = read.csv("lending_club_loan.csv", header = TRUE)
+library(tidyr)
+lend = drop_na(lend)
+dim(lend)
+colnames(lend)
+head(lend)
+library(DescTools)
+Desc(lend)
+summary(lend)
+library(pastecs)
+library(dplyr)
+lendsub = select(lend, c('loan_amnt','int_rate','installment','annual_inc',
+                         'dti','open_acc','pub_rec','revol_bal','revol_util','total_acc',
+                         'mort_acc','pub_rec_bankruptcies'))
+stat.desc(lendsub)
+```
+
+```{r}
+library(ggplot2)
+lend = drop_na(lend)
+qplot(lend$loan_amnt,
+      geom="histogram",  
+      main="Histogram for loan Amount", 
+      xlab="Loan Amount",
+      fill=I("lightblue"), 
+      col=I("black"), 
+      binwidth=1000)
+
+par(mfrow = c(2,2))
+#specify the margin
+par(mar = rep(2, 4))
+hist(lend$int_rate, ylim = c(0,40000), col = 'lightblue', main = 'Interest Rate')
+hist(lend$installment, ylim = c(0,80000),col = 'lightblue', main = 'Installment')
+plot(lend$term, ylim = c(0,350000), col = 'lightblue', main = 'Loan Term')
+plot(lend$loan_status, ylim = c(0,350000), col = 'lightblue', main = 'Loan Status')
+
+```
+
+```{r}
+ggplot(lend, aes(x = grade, y = loan_amnt)) + 
+  geom_boxplot(fill = "steelblue3", colour = "black", 
+  outlier.colour = "black", outlier.shape = 1) +
+  labs(title="Loan Amount by Grade", x = "Grade", y = "Loan Amount \n")
+
+ggplot(lend, aes(grade, int_rate)) +
+  geom_boxplot(fill = "steelblue3", colour = "black", 
+               outlier.colour = "black", outlier.shape = 1) +
+  labs(title ="Interest Rate by Grade", x = "Grade", y = "Interest Rate \n")
+
+ggplot(lend, aes(home_ownership, int_rate)) +
+  geom_boxplot(fill = "steelblue3", colour = "black", 
+               outlier.colour = "black", outlier.shape = 1) +
+  labs(title="Interest Rate by Home Ownership", x = "Home Ownership", y = "Interest Rate \n")
+
+ggplot(lend, aes(term, loan_amnt)) +
+  geom_boxplot(fill = "steelblue3", colour = "black", 
+               outlier.colour = "black", outlier.shape = 1) +
+  labs(title="Loan Amount by Term", x = "Term", y = "Loan Amount \n")
+```
+
+```{r}
+table(lend$purpose)
+info = c(4697, 83019, 234507, 257, 24030, 2201, 8790, 4196, 2854, 21185, 329, 5701, 2452, 1812)
+names = c("car", "credit_card", "debt_consolidation", "educational", "home_improvement", "house", "major_purchase", "medical", "moving", "other", "renewable_energy", "small_business", "vacation", "wedding")
+pie(info, labels=names, main = "Purpose")
+legend("topright", names, cex=0.5, fill = rainbow(length(info)))
+```
+
+```{r}
+library(ggcorrplot)
+df <- dplyr::select_if(lend, is.numeric)
+r <- cor(df, use="complete.obs")
+round(r,2)
+ggcorrplot(r,
+           hc.order = TRUE,
+           type = "lower", lab = TRUE)
+```
+
+```{r}
+input <- lend[,c("loan_status","loan_amnt","annual_inc","int_rate","installment", "revol_bal", "revol_util")]
+dim(input)
+train <- input[1:286411,]
+test <- input[286412:358014,]
+lend_glm<-glm(formula = input$loan_status ~ input$loan_amnt + 
+                 input$annual_inc + input$int_rate + input$installment + input$revol_bal + 
+                 input$revol_util, family = binomial, data = train)
+summary(lend_glm)
+```
+
+```{r}
+lend_lm1<-lm(formula = input$loan_amnt ~ input$loan_status + 
+                 input$annual_inc + input$int_rate + input$installment + 
+                 input$revol_bal + input$revol_util,data =train)
+summary(lend_lm1)
+
+lend_lm2<-lm(formula = input$loan_amnt~ input$revol_bal+ 
+               input$annual_inc + input$installment, data =train)
+summary(lend_lm2)
+
+```
+
+```{r}
+```
